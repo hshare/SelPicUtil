@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="bottom_pop_detail" mce_bogus="1" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@anim/window_detail_enter</item>
+        <item name="android:windowExitAnimation">@anim/window_detail_out</item>
+    </style>
+</resources>
