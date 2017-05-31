@@ -58,12 +58,12 @@ public class MainActivity1 extends AppCompatActivity {
         if ("iv1".equals(cropPicUtils.getImageTag())) {
             Glide.with(this)
                     .load("file://" + path)
-                    .thumbnail(0.1f)
+                    .thumbnail(0.2f)
                     .into(iv1);
         } else {
             Glide.with(this)
                     .load("file://" + path)
-                    .thumbnail(0.1f)
+                    .thumbnail(0.2f)
                     .into(iv2);
         }
 
