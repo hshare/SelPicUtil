@@ -5,26 +5,28 @@
     android:layout_height="match_parent"
     android:background="#7f000000"
     android:orientation="vertical"
-    android:paddingBottom="1px" >
+    android:paddingBottom="1px">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#ffffff"
-        android:orientation="vertical" >
+        android:layout_margin="10dp"
+        android:background="#00000000"
+        android:orientation="vertical">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="#e2e2e2" />
+        <!--<View-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="1px"-->
+        <!--android:background="#e2e2e2" />-->
 
         <Button
             android:id="@+id/bt_firstbar"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/adapter_select"
-            android:text=""
+            android:background="@drawable/shape_bottom_pop_top_djfk"
+            android:gravity="center"
+            android:text="相册"
             android:textColor="#0a6ed2"
             android:textSize="15sp" />
 
@@ -37,8 +39,9 @@
             android:id="@+id/bt_secondbar"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/adapter_select"
-            android:text=""
+            android:background="@drawable/shape_bottom_pop_bottom_fajp"
+            android:gravity="center"
+            android:text="相机"
             android:textColor="#0a6ed2"
             android:textSize="15sp" />
 
@@ -46,14 +49,15 @@
             android:layout_width="match_parent"
             android:layout_height="8dp"
             android:layout_alignParentBottom="true"
-            android:background="#ebebeb"
+            android:background="#00000000"
             android:orientation="vertical" />
 
         <Button
             android:id="@+id/bt_cancelbar"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/adapter_select"
+            android:background="@drawable/shape_bottom_pop_bddfd"
+            android:gravity="center"
             android:text="取消"
             android:textColor="#0a6ed2"
             android:textSize="15sp" />

@@ -125,7 +125,7 @@ public class BottomPopWindow {
      * @param secondText 第二个按钮显示的文字
      */
     public void initTitleWindow(String firstText, String secondText) {
-        myView = LayoutInflater.from(context).inflate(R.layout.pop_bottom_view, null);
+        myView = LayoutInflater.from(context).inflate(R.layout.pop_bottom_view_dfjkf, null);
         btFirstbar = (Button) myView.findViewById(R.id.bt_firstbar);
         btSecondbar = (Button) myView.findViewById(R.id.bt_secondbar);
         btCancelbar = (Button) myView.findViewById(R.id.bt_cancelbar);
