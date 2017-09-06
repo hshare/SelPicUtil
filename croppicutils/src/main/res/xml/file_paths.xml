@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding= "utf-8"?>
+<resources>
+    <paths >
+        <files-path path="" name="intfiles" />
+        <external-path path="" name="extfiles" />
+        <root-path path="" name="camera_photos" />
+    </paths >
+</resources>

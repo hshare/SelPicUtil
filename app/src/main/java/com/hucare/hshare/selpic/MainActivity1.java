@@ -24,7 +24,31 @@ public class MainActivity1 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        cropPicUtils = new CropPicUtils(this, null);
+        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true);
+        cropPicUtils.setOnCompressResult(new CropPicUtils.onCompressResult() {
+            @Override
+            public void onSuccess(String filePath) {
+                if (TextUtils.isEmpty(filePath)) {
+                    return;
+                }
+                if ("iv1".equals(cropPicUtils.getImageTag())) {
+                    Glide.with(MainActivity1.this)
+                            .load(filePath)
+                            .thumbnail(0.2f)
+                            .into(iv1);
+                } else {
+                    Glide.with(MainActivity1.this)
+                            .load(filePath)
+                            .thumbnail(0.2f)
+                            .into(iv2);
+                }
+            }
+
+            @Override
+            public void onFailed(String errorMsg) {
+
+            }
+        });
         bottomPopWindow = new BottomPopWindow(this, new BottomPopWindow.PopClick() {
             @Override
             public void firstClick() {
@@ -51,21 +75,21 @@ public class MainActivity1 extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        String path = cropPicUtils.onActivityResult(requestCode, resultCode, data);
-        if (TextUtils.isEmpty(path)) {
-            return;
-        }
-        if ("iv1".equals(cropPicUtils.getImageTag())) {
-            Glide.with(this)
-                    .load("file://" + path)
-                    .thumbnail(0.2f)
-                    .into(iv1);
-        } else {
-            Glide.with(this)
-                    .load("file://" + path)
-                    .thumbnail(0.2f)
-                    .into(iv2);
-        }
+        cropPicUtils.onActivityResult(requestCode, resultCode, data);
+//        if (TextUtils.isEmpty(path)) {
+//            return;
+//        }
+//        if ("iv1".equals(cropPicUtils.getImageTag())) {
+//            Glide.with(this)
+//                    .load("file://" + path)
+//                    .thumbnail(0.2f)
+//                    .into(iv1);
+//        } else {
+//            Glide.with(this)
+//                    .load("file://" + path)
+//                    .thumbnail(0.2f)
+//                    .into(iv2);
+//        }
 
     }
 }

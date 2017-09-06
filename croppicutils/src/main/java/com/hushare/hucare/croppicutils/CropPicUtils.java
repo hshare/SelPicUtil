@@ -1,6 +1,7 @@
 package com.hushare.hucare.croppicutils;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,9 +10,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import java.io.File;
@@ -19,6 +23,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import top.zibin.luban.Luban;
+import top.zibin.luban.OnCompressListener;
 
 /**
  * 功能/模块 ：从相册或者拍照获取照片并裁剪
@@ -41,7 +48,7 @@ public class CropPicUtils extends BaseBeUtil {
     /**
      * 图片的uri
      */
-    private Uri photoUri;
+//    private Uri photoUri;
     /**
      * 裁剪图片的比例x
      */
@@ -50,10 +57,6 @@ public class CropPicUtils extends BaseBeUtil {
      * 裁剪图片的比例y
      */
     private int ssY = 1;
-    /**
-     * 压缩图片的宽度
-     */
-    private int picWidth = 720;
     /**
      * 标志位，从相机获取图片
      */
@@ -70,6 +73,13 @@ public class CropPicUtils extends BaseBeUtil {
      * 是否裁剪
      */
     private boolean isCrop = false;
+
+    private boolean isCompress = false;
+
+    private int ignoreKB = 100;
+
+    private ProgressDialog progressDialog;
+
     /**
      * 缓存路径
      */
@@ -78,6 +88,8 @@ public class CropPicUtils extends BaseBeUtil {
      * 图片的tag，如果当前界面有多处需要获取图片，使用tag可以区分是哪里获取图片
      */
     private Object imageTag = "";
+
+    private onCompressResult onCompressResult;
 
     public Object getImageTag() {
         return imageTag;
@@ -95,6 +107,15 @@ public class CropPicUtils extends BaseBeUtil {
         super(context, "huzeliang");
         this.fragment = fragment;
         this.context = context;
+        progressDialog = new ProgressDialog(context);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(true);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.setMessage("压缩图片中...");
+//        progressDialog.setIcon(R.drawable.ic_launcher);
+        progressDialog.setMax(100);
+
+
 //        this.ssX = sX;
 //        this.ssY = sY;
 //        this.picWidth = picWidth;
@@ -110,6 +131,26 @@ public class CropPicUtils extends BaseBeUtil {
         }
 
         super.iLog("初始化StorePath：" + STOREPATH);
+    }
+
+    public CropPicUtils setIsCompress(boolean compress) {
+        isCompress = compress;
+        return this;
+    }
+
+    public CropPicUtils setIgnoreKB(int ignoreKB) {
+        this.ignoreKB = ignoreKB;
+        return this;
+    }
+
+    public interface onCompressResult {
+        void onSuccess(String filePath);
+
+        void onFailed(String errorMsg);
+    }
+
+    public void setOnCompressResult(CropPicUtils.onCompressResult onCompressResult) {
+        this.onCompressResult = onCompressResult;
     }
 
     /**
@@ -140,10 +181,10 @@ public class CropPicUtils extends BaseBeUtil {
      * @param picWidth 最小尺寸
      * @return 你懂的
      */
-    public CropPicUtils setPicWidth(int picWidth) {
-        this.picWidth = picWidth;
-        return this;
-    }
+//    public CropPicUtils setPicWidth(int picWidth) {
+//        this.picWidth = picWidth;
+//        return this;
+//    }
 
     /**
      * 设置是否裁剪
@@ -162,18 +203,18 @@ public class CropPicUtils extends BaseBeUtil {
      * @param index 裁剪的宽度
      * @return bitmap
      */
-    private Bitmap getCropBitmap(int index) {
-        if (photoUri != null) {
-            if (fragment != null) {
-                return getCompressImage(fragment.getActivity(), photoUri, index);
-            } else {
-                return getCompressImage(context, photoUri, index);
-            }
-
-        } else {
-            return null;
-        }
-    }
+//    private Bitmap getCropBitmap(int index) {
+//        if (photoUri != null) {
+//            if (fragment != null) {
+//                return getCompressImage(fragment.getActivity(), photoUri, index);
+//            } else {
+//                return getCompressImage(context, photoUri, index);
+//            }
+//
+//        } else {
+//            return null;
+//        }
+//    }
 
     /**
      * 获取压缩后的bitmap
@@ -183,33 +224,33 @@ public class CropPicUtils extends BaseBeUtil {
      * @param picWidth 图片宽度
      * @return bitmap
      */
-    public static Bitmap getCompressImage(Context context, Uri srcPath, int picWidth) {
-        Bitmap bitmap = null;
-
-        try {
-            BitmapFactory.Options e = new BitmapFactory.Options();
-            e.inJustDecodeBounds = true;
-            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
-            e.inJustDecodeBounds = false;
-            int w = e.outWidth;
-            int h = e.outHeight;
-            int be = 1;
-            if (w > picWidth) {
-                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
-            }
-
-            if (be <= 0) {
-                be = 1;
-            }
-
-            e.inSampleSize = be;
-            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
-        } catch (FileNotFoundException var8) {
-            var8.printStackTrace();
-        }
-
-        return bitmap;
-    }
+//    public static Bitmap getCompressImage(Context context, Uri srcPath, int picWidth) {
+//        Bitmap bitmap = null;
+//
+//        try {
+//            BitmapFactory.Options e = new BitmapFactory.Options();
+//            e.inJustDecodeBounds = true;
+//            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
+//            e.inJustDecodeBounds = false;
+//            int w = e.outWidth;
+//            int h = e.outHeight;
+//            int be = 1;
+//            if (w > picWidth) {
+//                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
+//            }
+//
+//            if (be <= 0) {
+//                be = 1;
+//            }
+//
+//            e.inSampleSize = be;
+//            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
+//        } catch (FileNotFoundException var8) {
+//            var8.printStackTrace();
+//        }
+//
+//        return bitmap;
+//    }
 
     /**
      * 获取压缩后图片的路径
@@ -218,89 +259,98 @@ public class CropPicUtils extends BaseBeUtil {
      * @param picWidth 图片宽度
      * @return 图片路径
      */
-    public static String getCompressImage(String srcPath, int picWidth) {
-        String path = "";
-        Bitmap bitmap = null;
-        try {
-            BitmapFactory.Options e = new BitmapFactory.Options();
-            e.inJustDecodeBounds = true;
-            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
-            e.inJustDecodeBounds = false;
-            int w = e.outWidth;
-            int h = e.outHeight;
-            int be = 1;
-            if (w > picWidth) {
-                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
-            }
-
-            if (be <= 0) {
-                be = 1;
-            }
-
-            e.inSampleSize = be;
-            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
-            path = saveBitmap(bitmap, getFilePathBaseOnTime("yasuo.jpg"));
-        } catch (FileNotFoundException var8) {
-            var8.printStackTrace();
-        }
-
-        return path;
-    }
+//    public static String getCompressImage(String srcPath, int picWidth) {
+//        String path = "";
+//        Bitmap bitmap = null;
+//        try {
+//            BitmapFactory.Options e = new BitmapFactory.Options();
+//            e.inJustDecodeBounds = true;
+//            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
+//            e.inJustDecodeBounds = false;
+//            int w = e.outWidth;
+//            int h = e.outHeight;
+//            int be = 1;
+//            if (w > picWidth) {
+//                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
+//            }
+//
+//            if (be <= 0) {
+//                be = 1;
+//            }
+//
+//            e.inSampleSize = be;
+//            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
+//            path = saveBitmap(bitmap, getFilePathBaseOnTime("yasuo.jpg"));
+//        } catch (FileNotFoundException var8) {
+//            var8.printStackTrace();
+//        }
+//
+//        return path;
+//    }
 
     /**
      * 裁剪从相机获取到的图片
      */
-    private void cropCmr() {
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        setIntentParams(intent);
-        if (fragment != null) {
-            fragment.startActivityForResult(intent, PIC_FROM_CAIJIAN);
-        } else {
-            ((Activity) context).startActivityForResult(intent, PIC_FROM_CAIJIAN);
-        }
-    }
+//    private void cropCmr() {
+//        Intent intent = new Intent("com.android.camera.action.CROP");
+//        setIntentParams(intent);
+//        if (fragment != null) {
+//            fragment.startActivityForResult(intent, PIC_FROM_CAIJIAN);
+//        } else {
+//            ((Activity) context).startActivityForResult(intent, PIC_FROM_CAIJIAN);
+//        }
+//    }
 
     /**
      * 裁剪图片
      *
      * @param data intent
      */
-    private void cropPic(Intent data) {
-        if (data != null) {
-            Uri selectedImage = data.getData();
-            String[] filePathColumns = {MediaStore.Images.Media.DATA};
-            Cursor cursor = context.getContentResolver().query(selectedImage, filePathColumns, null, null, null);
-            if (cursor == null) {
-                Toast.makeText(context, "解析出错...请重新选择...", Toast.LENGTH_LONG).show();
-                return;
-            }
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(filePathColumns[0]);
-            String imagePath = cursor.getString(columnIndex);
-            cursor.close();
-            cropImageUriByTakePhoto(Uri.fromFile(new File(imagePath)));
-        } else {
-        }
-    }
+//    private void cropPic(Intent data) {
+//        if (data != null) {
+//            Uri selectedImage = data.getData();
+//            String[] filePathColumns = {MediaStore.Images.Media.DATA};
+//            Cursor cursor = context.getContentResolver().query(selectedImage, filePathColumns, null, null, null);
+//            if (cursor == null) {
+//                Toast.makeText(context, "解析出错...请重新选择...", Toast.LENGTH_LONG).show();
+//                return;
+//            }
+//            cursor.moveToFirst();
+//            int columnIndex = cursor.getColumnIndex(filePathColumns[0]);
+//            String imagePath = cursor.getString(columnIndex);
+//            cursor.close();
+//            //TODO fff
+//
+//            Uri tempU = null;
+//            if (Build.VERSION.SDK_INT >= 24) {
+//                tempU = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(imagePath));
+//            }else {
+//                tempU = Uri.fromFile(new File(imagePath));
+//            }
+//
+//            cropImageUriByTakePhoto(tempU);
+//        } else {
+//        }
+//    }
 
     /**
      * 使用uri裁剪图片
      *
      * @param uri uri
      */
-    private void cropImageUriByTakePhoto(Uri uri) {
-        setPhotoUri(uri);
-        cropCmr();
-    }
+//    private void cropImageUriByTakePhoto(Uri uri) {
+//        setPhotoUri(uri);
+//        cropCmr();
+//    }
 
     /**
      * 设置图片uri
      *
      * @param uri uri
      */
-    private void setPhotoUri(Uri uri) {
-        this.photoUri = uri;
-    }
+//    private void setPhotoUri(Uri uri) {
+//        this.photoUri = uri;
+//    }
 
     /**
      * 图片处理逻辑
@@ -312,6 +362,12 @@ public class CropPicUtils extends BaseBeUtil {
             if (type == PIC_FROM_LOCALPHOTO) {
                 super.iLog("doHandlerPhoto::PIC_FROM_LOCALPHOTO");
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+                if (Build.VERSION.SDK_INT >= 24) {
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                }
+
                 if (fragment != null) {
                     fragment.startActivityForResult(intent, PIC_FROM_LOCALPHOTO);
                 } else {
@@ -321,8 +377,20 @@ public class CropPicUtils extends BaseBeUtil {
                 super.iLog("doHandlerPhoto::PIC_FROM_CAMERA");
                 if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
                     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    photoUri = Uri.fromFile(new File(getFilePathBaseOnTime(".jpg")));
-                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+
+                    Uri temp = null;
+                    File file = new File(getFilePathBaseOnTime(".jpg"));
+                    cameraOutUri = Uri.fromFile(file);
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        temp = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+                        //添加这一句表示对目标应用临时授权该Uri所代表的文件
+                        cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    } else {
+                        temp = Uri.fromFile(file);
+                    }
+
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, temp);
                     cameraIntent.putExtra("return-data", true);
                     if (fragment != null) {
                         fragment.startActivityForResult(cameraIntent, PIC_FROM_CAMERA);
@@ -336,9 +404,12 @@ public class CropPicUtils extends BaseBeUtil {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             super.iLog("doHandlerPhoto::处理图片出现错误");
         }
     }
+
+    private Uri cameraOutUri;
 
     /**
      * 需要在Activity或者Fragment中的onActivityResult调用此方法，获取图片路径
@@ -348,26 +419,25 @@ public class CropPicUtils extends BaseBeUtil {
      * @param data        你懂的
      * @return 图片路径
      */
-    public String onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) {
             super.iLog("onActivityResult::resultCode != Activity.RESULT_OK");
-            return "";
         }
         String path = "";
         if (isCrop) {
             super.iLog("onActivityResult::isCrop == true");
             switch (requestCode) {
                 case PIC_FROM_CAMERA:
-                    cropCmr();
+//                    cropCmr();
                     break;
                 case PIC_FROM_CAIJIAN:
-                    Bitmap bitmap = getCropBitmap(picWidth);
-                    if (bitmap != null) {
-                        path = saveBitmap(bitmap, getFilePathBaseOnTime("caijian.jpg"));
-                    }
+//                    Bitmap bitmap = getCropBitmap(picWidth);
+//                    if (bitmap != null) {
+//                        path = saveBitmap(bitmap, getFilePathBaseOnTime("caijian.jpg"));
+//                    }
                     break;
                 case PIC_FROM_LOCALPHOTO:
-                    cropPic(data);
+//                    cropPic(data);
                     break;
                 default:
                     break;
@@ -377,7 +447,7 @@ public class CropPicUtils extends BaseBeUtil {
             switch (requestCode) {
                 case PIC_FROM_CAMERA:
                     super.iLog("onActivityResult::PIC_FROM_CAMERA");
-                    path = getRealFilePath(context, photoUri);
+                    path = getRealFilePath(context, cameraOutUri);
                     break;
                 case PIC_FROM_LOCALPHOTO:
                     if (data != null) {
@@ -391,7 +461,53 @@ public class CropPicUtils extends BaseBeUtil {
 
         }
         super.iLog("onActivityResult::path:" + path);
-        return path;
+
+        if (isCompress){
+            compressPic(context, path);
+        }else {
+            if (onCompressResult != null){
+                if (TextUtils.isEmpty(path)){
+                    onCompressResult.onFailed("获取图片失败");
+                }else {
+                    onCompressResult.onSuccess(path);
+                }
+            }
+        }
+
+    }
+
+    private void compressPic(Context context, String inputPath) {
+        Luban.with(context)
+                .load(inputPath)                                   // 传人要压缩的图片列表
+                .ignoreBy(100)                                  // 忽略不压缩图片的大小
+                .setTargetDir(STOREPATH)                        // 设置压缩后文件存储位置
+                .setCompressListener(new OnCompressListener() { //设置回调
+                    @Override
+                    public void onStart() {
+                        progressDialog.show();
+                        iLog("onStart");
+                    }
+
+                    @Override
+                    public void onSuccess(File file) {
+                        progressDialog.dismiss();
+                        iLog("onSuccess:" + file.getAbsolutePath());
+                        iLog("onSuccess:" + file.getPath());
+
+                        if (onCompressResult != null){
+                            onCompressResult.onSuccess(file.getAbsolutePath());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressDialog.dismiss();
+                        iLog("onError");
+                        if (onCompressResult != null){
+                            onCompressResult.onFailed("压缩图片失败了...");
+                        }
+                    }
+                }).launch();    //启动压缩
     }
 
     /**
@@ -401,26 +517,26 @@ public class CropPicUtils extends BaseBeUtil {
      * @param filepath 保存的路径
      * @return 返回图片的路径
      */
-    public static String saveBitmap(Bitmap bm, String filepath) {
-        try {
-            File e = new File(filepath);
-            if (e.exists()) {
-                e.delete();
-            }
-
-            FileOutputStream out = new FileOutputStream(e);
-            bm.compress(Bitmap.CompressFormat.JPEG, 90, out);
-            out.flush();
-            out.close();
-            return filepath;
-        } catch (FileNotFoundException var4) {
-            var4.printStackTrace();
-        } catch (IOException var5) {
-            var5.printStackTrace();
-        }
-
-        return "";
-    }
+//    public static String saveBitmap(Bitmap bm, String filepath) {
+//        try {
+//            File e = new File(filepath);
+//            if (e.exists()) {
+//                e.delete();
+//            }
+//
+//            FileOutputStream out = new FileOutputStream(e);
+//            bm.compress(Bitmap.CompressFormat.JPEG, 90, out);
+//            out.flush();
+//            out.close();
+//            return filepath;
+//        } catch (FileNotFoundException var4) {
+//            var4.printStackTrace();
+//        } catch (IOException var5) {
+//            var5.printStackTrace();
+//        }
+//
+//        return "";
+//    }
 
 
     /**
@@ -428,19 +544,32 @@ public class CropPicUtils extends BaseBeUtil {
      *
      * @param intent intent
      */
-    private void setIntentParams(Intent intent) {
-        Uri uri = photoUri;
-        intent.setDataAndType(uri, "image/*");
-        intent.putExtra("crop", "true");
-        intent.putExtra("aspectX", ssX);
-        intent.putExtra("aspectY", ssY);
-        intent.putExtra("noFaceDetection", true);
-        intent.putExtra("scale", true);
-        intent.putExtra("return-data", false);
-        photoUri = Uri.fromFile(new File(getFilePathBaseOnTime("intent.jpg")));
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-    }
+//    private void setIntentParams(Intent intent) {
+//
+//        Uri uri = photoUri;
+//        intent.setDataAndType(uri, "image/*");
+//        intent.putExtra("crop", "true");
+//        intent.putExtra("aspectX", ssX);
+//        intent.putExtra("aspectY", ssY);
+//        intent.putExtra("noFaceDetection", true);
+//        intent.putExtra("scale", true);
+//        intent.putExtra("return-data", false);
+//
+//
+//        if (Build.VERSION.SDK_INT >= 24) {
+//            photoUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(getFilePathBaseOnTime("intent.jpg")));
+//            //添加这一句表示对目标应用临时授权该Uri所代表的文件
+//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+//                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//        }else {
+//            photoUri = Uri.fromFile(new File(getFilePathBaseOnTime("intent.jpg")));
+//        }
+//
+//
+//
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+//        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+//    }
 
     /**
      * 通过uri获取图片的路径
@@ -483,6 +612,7 @@ public class CropPicUtils extends BaseBeUtil {
 
     /**
      * 获取格式化后的图片路径
+     *
      * @param imageName 图片名称
      * @return 图片路径
      */

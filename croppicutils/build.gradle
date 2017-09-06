@@ -22,5 +22,6 @@ android {
 }
 
 dependencies {
+    compile 'top.zibin:Luban:1.1.3'
     compile 'com.android.support:support-v4:25.3.1'
 }
