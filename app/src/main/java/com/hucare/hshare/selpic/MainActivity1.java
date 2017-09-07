@@ -24,7 +24,7 @@ public class MainActivity1 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true);
+        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true).setIsCrop(true);
         cropPicUtils.setOnCompressResult(new CropPicUtils.onCompressResult() {
             @Override
             public void onSuccess(String filePath) {

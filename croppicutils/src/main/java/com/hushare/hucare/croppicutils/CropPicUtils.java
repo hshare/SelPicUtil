@@ -28,10 +28,12 @@ import top.zibin.luban.Luban;
 import top.zibin.luban.OnCompressListener;
 
 /**
- * 功能/模块 ：从相册或者拍照获取照片并裁剪
+ * 功能/模块 ：从相册或者拍照获取照片
+ * 支持任意比例裁剪
+ * 支持压缩，指定大小
  *
  * @author huzeliang
- * @version 1.0 2017/3/21
+ * @version 1.1 2017/9/7对Android7.0进行了适配，并删除了bitmap操作
  * @see ***
  * @since ***
  */
@@ -45,10 +47,6 @@ public class CropPicUtils extends BaseBeUtil {
      * 上下文，不可少
      */
     private Context context;
-    /**
-     * 图片的uri
-     */
-//    private Uri photoUri;
     /**
      * 裁剪图片的比例x
      */
@@ -73,13 +71,18 @@ public class CropPicUtils extends BaseBeUtil {
      * 是否裁剪
      */
     private boolean isCrop = false;
-
+    /**
+     * 是否压缩
+     */
     private boolean isCompress = false;
-
+    /**
+     * 忽略图片大小，小于这个大小不压缩
+     */
     private int ignoreKB = 100;
-
+    /**
+     * 压缩的进度条
+     */
     private ProgressDialog progressDialog;
-
     /**
      * 缓存路径
      */
@@ -88,19 +91,35 @@ public class CropPicUtils extends BaseBeUtil {
      * 图片的tag，如果当前界面有多处需要获取图片，使用tag可以区分是哪里获取图片
      */
     private Object imageTag = "";
-
+    /**
+     * 图片回调借口
+     */
     private onCompressResult onCompressResult;
+    /**
+     * 拍照的原始uri
+     */
+    private Uri cameraOutUri;
 
+    /**
+     * 获取图片的tag
+     *
+     * @return tag
+     */
     public Object getImageTag() {
         return imageTag;
     }
 
+    /**
+     * 设置图片的tag
+     *
+     * @param imageTag 图片tag
+     */
     public void setImageTag(Object imageTag) {
         this.imageTag = imageTag;
     }
 
     /**
-     * @param context
+     * @param context  上下文
      * @param fragment 如果不是fragment，就传null
      */
     public CropPicUtils(Context context, Fragment fragment) {
@@ -112,14 +131,8 @@ public class CropPicUtils extends BaseBeUtil {
         progressDialog.setCancelable(true);
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.setMessage("压缩图片中...");
-//        progressDialog.setIcon(R.drawable.ic_launcher);
         progressDialog.setMax(100);
 
-
-//        this.ssX = sX;
-//        this.ssY = sY;
-//        this.picWidth = picWidth;
-//        this.isCrop = isCrop;
         STOREPATH = context.getExternalFilesDir(null).getAbsolutePath() + "/tempCache/";
 
         try {
@@ -133,22 +146,43 @@ public class CropPicUtils extends BaseBeUtil {
         super.iLog("初始化StorePath：" + STOREPATH);
     }
 
+    /**
+     * 设置是否压缩
+     *
+     * @param compress 是否压缩
+     * @return 你懂的
+     */
     public CropPicUtils setIsCompress(boolean compress) {
         isCompress = compress;
         return this;
     }
 
+    /**
+     * 设置最低图片大小
+     *
+     * @param ignoreKB 图片大小，单位kb
+     * @return 你懂的
+     */
     public CropPicUtils setIgnoreKB(int ignoreKB) {
         this.ignoreKB = ignoreKB;
         return this;
     }
 
+    /**
+     * 回调接口，不懂我也没办法啊
+     */
     public interface onCompressResult {
+
         void onSuccess(String filePath);
 
         void onFailed(String errorMsg);
     }
 
+    /**
+     * 设置回调接口
+     *
+     * @param onCompressResult 实现的回调接口
+     */
     public void setOnCompressResult(CropPicUtils.onCompressResult onCompressResult) {
         this.onCompressResult = onCompressResult;
     }
@@ -176,17 +210,6 @@ public class CropPicUtils extends BaseBeUtil {
     }
 
     /**
-     * 设置图片压缩的最小尺寸
-     *
-     * @param picWidth 最小尺寸
-     * @return 你懂的
-     */
-//    public CropPicUtils setPicWidth(int picWidth) {
-//        this.picWidth = picWidth;
-//        return this;
-//    }
-
-    /**
      * 设置是否裁剪
      *
      * @param isCrop 是否裁剪
@@ -198,159 +221,42 @@ public class CropPicUtils extends BaseBeUtil {
     }
 
     /**
-     * 获取裁剪后的bitmap
+     * 裁剪工具
      *
-     * @param index 裁剪的宽度
-     * @return bitmap
+     * @param normalUri
      */
-//    private Bitmap getCropBitmap(int index) {
-//        if (photoUri != null) {
-//            if (fragment != null) {
-//                return getCompressImage(fragment.getActivity(), photoUri, index);
-//            } else {
-//                return getCompressImage(context, photoUri, index);
-//            }
-//
-//        } else {
-//            return null;
-//        }
-//    }
+    private void cropUtil(Uri normalUri) {
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        Uri ttempUri = null;
+        Uri tempUri = null;
+        if (Build.VERSION.SDK_INT >= 24) {
+//            tempUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(getFilePathBaseOnTime("intent.jpg")));
+            ttempUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(getRealFilePath(context, normalUri)));
+            //添加这一句表示对目标应用临时授权该Uri所代表的文件
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        } else {
+//            tempUri = Uri.fromFile(new File(getFilePathBaseOnTime("intent.jpg")));
+            ttempUri = normalUri;
+        }
+        //照片 截取输出的outputUri，只能使用 Uri.fromFile，不能用FileProvider.getUriForFile
+        tempUri = Uri.fromFile(new File(getFilePathBaseOnTime("intent.jpg")));
+        intent.setDataAndType(ttempUri, "image/*");
+        intent.putExtra("crop", "true");
+        intent.putExtra("aspectX", ssX);
+        intent.putExtra("aspectY", ssY);
+        intent.putExtra("noFaceDetection", true);
+        intent.putExtra("scale", true);
+        intent.putExtra("return-data", true);
 
-    /**
-     * 获取压缩后的bitmap
-     *
-     * @param context  上下文
-     * @param srcPath  图片uri
-     * @param picWidth 图片宽度
-     * @return bitmap
-     */
-//    public static Bitmap getCompressImage(Context context, Uri srcPath, int picWidth) {
-//        Bitmap bitmap = null;
-//
-//        try {
-//            BitmapFactory.Options e = new BitmapFactory.Options();
-//            e.inJustDecodeBounds = true;
-//            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
-//            e.inJustDecodeBounds = false;
-//            int w = e.outWidth;
-//            int h = e.outHeight;
-//            int be = 1;
-//            if (w > picWidth) {
-//                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
-//            }
-//
-//            if (be <= 0) {
-//                be = 1;
-//            }
-//
-//            e.inSampleSize = be;
-//            bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(srcPath), new Rect(), e);
-//        } catch (FileNotFoundException var8) {
-//            var8.printStackTrace();
-//        }
-//
-//        return bitmap;
-//    }
-
-    /**
-     * 获取压缩后图片的路径
-     *
-     * @param srcPath  图片路径
-     * @param picWidth 图片宽度
-     * @return 图片路径
-     */
-//    public static String getCompressImage(String srcPath, int picWidth) {
-//        String path = "";
-//        Bitmap bitmap = null;
-//        try {
-//            BitmapFactory.Options e = new BitmapFactory.Options();
-//            e.inJustDecodeBounds = true;
-//            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
-//            e.inJustDecodeBounds = false;
-//            int w = e.outWidth;
-//            int h = e.outHeight;
-//            int be = 1;
-//            if (w > picWidth) {
-//                be = (int) (1.0D * (double) w / (double) ((float) picWidth));
-//            }
-//
-//            if (be <= 0) {
-//                be = 1;
-//            }
-//
-//            e.inSampleSize = be;
-//            bitmap = BitmapFactory.decodeStream(new FileInputStream(srcPath), new Rect(), e);
-//            path = saveBitmap(bitmap, getFilePathBaseOnTime("yasuo.jpg"));
-//        } catch (FileNotFoundException var8) {
-//            var8.printStackTrace();
-//        }
-//
-//        return path;
-//    }
-
-    /**
-     * 裁剪从相机获取到的图片
-     */
-//    private void cropCmr() {
-//        Intent intent = new Intent("com.android.camera.action.CROP");
-//        setIntentParams(intent);
-//        if (fragment != null) {
-//            fragment.startActivityForResult(intent, PIC_FROM_CAIJIAN);
-//        } else {
-//            ((Activity) context).startActivityForResult(intent, PIC_FROM_CAIJIAN);
-//        }
-//    }
-
-    /**
-     * 裁剪图片
-     *
-     * @param data intent
-     */
-//    private void cropPic(Intent data) {
-//        if (data != null) {
-//            Uri selectedImage = data.getData();
-//            String[] filePathColumns = {MediaStore.Images.Media.DATA};
-//            Cursor cursor = context.getContentResolver().query(selectedImage, filePathColumns, null, null, null);
-//            if (cursor == null) {
-//                Toast.makeText(context, "解析出错...请重新选择...", Toast.LENGTH_LONG).show();
-//                return;
-//            }
-//            cursor.moveToFirst();
-//            int columnIndex = cursor.getColumnIndex(filePathColumns[0]);
-//            String imagePath = cursor.getString(columnIndex);
-//            cursor.close();
-//            //TODO fff
-//
-//            Uri tempU = null;
-//            if (Build.VERSION.SDK_INT >= 24) {
-//                tempU = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(imagePath));
-//            }else {
-//                tempU = Uri.fromFile(new File(imagePath));
-//            }
-//
-//            cropImageUriByTakePhoto(tempU);
-//        } else {
-//        }
-//    }
-
-    /**
-     * 使用uri裁剪图片
-     *
-     * @param uri uri
-     */
-//    private void cropImageUriByTakePhoto(Uri uri) {
-//        setPhotoUri(uri);
-//        cropCmr();
-//    }
-
-    /**
-     * 设置图片uri
-     *
-     * @param uri uri
-     */
-//    private void setPhotoUri(Uri uri) {
-//        this.photoUri = uri;
-//    }
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, tempUri);
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+        if (fragment != null) {
+            fragment.startActivityForResult(intent, PIC_FROM_CAIJIAN);
+        } else {
+            ((Activity) context).startActivityForResult(intent, PIC_FROM_CAIJIAN);
+        }
+    }
 
     /**
      * 图片处理逻辑
@@ -409,8 +315,6 @@ public class CropPicUtils extends BaseBeUtil {
         }
     }
 
-    private Uri cameraOutUri;
-
     /**
      * 需要在Activity或者Fragment中的onActivityResult调用此方法，获取图片路径
      *
@@ -428,16 +332,28 @@ public class CropPicUtils extends BaseBeUtil {
             super.iLog("onActivityResult::isCrop == true");
             switch (requestCode) {
                 case PIC_FROM_CAMERA:
-//                    cropCmr();
+                    cropUtil(cameraOutUri);
                     break;
                 case PIC_FROM_CAIJIAN:
-//                    Bitmap bitmap = getCropBitmap(picWidth);
-//                    if (bitmap != null) {
-//                        path = saveBitmap(bitmap, getFilePathBaseOnTime("caijian.jpg"));
-//                    }
+                    if (data != null) {
+                        path = getRealFilePath(context, data.getData());
+                        if (isCompress) {
+                            compressPic(context, path);
+                        } else {
+                            if (onCompressResult != null) {
+                                if (TextUtils.isEmpty(path)) {
+                                    onCompressResult.onFailed("获取图片失败");
+                                } else {
+                                    onCompressResult.onSuccess(path);
+                                }
+                            }
+                        }
+                    }
                     break;
                 case PIC_FROM_LOCALPHOTO:
-//                    cropPic(data);
+                    if (data != null) {
+                        cropUtil(data.getData());
+                    }
                     break;
                 default:
                     break;
@@ -458,24 +374,30 @@ public class CropPicUtils extends BaseBeUtil {
                 default:
                     break;
             }
+            if (isCompress) {
+                compressPic(context, path);
+            } else {
+                if (onCompressResult != null) {
+                    if (TextUtils.isEmpty(path)) {
+                        onCompressResult.onFailed("获取图片失败");
+                    } else {
+                        onCompressResult.onSuccess(path);
+                    }
+                }
+            }
 
         }
         super.iLog("onActivityResult::path:" + path);
 
-        if (isCompress){
-            compressPic(context, path);
-        }else {
-            if (onCompressResult != null){
-                if (TextUtils.isEmpty(path)){
-                    onCompressResult.onFailed("获取图片失败");
-                }else {
-                    onCompressResult.onSuccess(path);
-                }
-            }
-        }
 
     }
 
+    /**
+     * 压缩图片
+     *
+     * @param context
+     * @param inputPath
+     */
     private void compressPic(Context context, String inputPath) {
         Luban.with(context)
                 .load(inputPath)                                   // 传人要压缩的图片列表
@@ -494,7 +416,7 @@ public class CropPicUtils extends BaseBeUtil {
                         iLog("onSuccess:" + file.getAbsolutePath());
                         iLog("onSuccess:" + file.getPath());
 
-                        if (onCompressResult != null){
+                        if (onCompressResult != null) {
                             onCompressResult.onSuccess(file.getAbsolutePath());
                         }
                     }
@@ -503,73 +425,12 @@ public class CropPicUtils extends BaseBeUtil {
                     public void onError(Throwable e) {
                         progressDialog.dismiss();
                         iLog("onError");
-                        if (onCompressResult != null){
+                        if (onCompressResult != null) {
                             onCompressResult.onFailed("压缩图片失败了...");
                         }
                     }
                 }).launch();    //启动压缩
     }
-
-    /**
-     * 保存bitmap
-     *
-     * @param bm       bitmap
-     * @param filepath 保存的路径
-     * @return 返回图片的路径
-     */
-//    public static String saveBitmap(Bitmap bm, String filepath) {
-//        try {
-//            File e = new File(filepath);
-//            if (e.exists()) {
-//                e.delete();
-//            }
-//
-//            FileOutputStream out = new FileOutputStream(e);
-//            bm.compress(Bitmap.CompressFormat.JPEG, 90, out);
-//            out.flush();
-//            out.close();
-//            return filepath;
-//        } catch (FileNotFoundException var4) {
-//            var4.printStackTrace();
-//        } catch (IOException var5) {
-//            var5.printStackTrace();
-//        }
-//
-//        return "";
-//    }
-
-
-    /**
-     * 设置公用参数
-     *
-     * @param intent intent
-     */
-//    private void setIntentParams(Intent intent) {
-//
-//        Uri uri = photoUri;
-//        intent.setDataAndType(uri, "image/*");
-//        intent.putExtra("crop", "true");
-//        intent.putExtra("aspectX", ssX);
-//        intent.putExtra("aspectY", ssY);
-//        intent.putExtra("noFaceDetection", true);
-//        intent.putExtra("scale", true);
-//        intent.putExtra("return-data", false);
-//
-//
-//        if (Build.VERSION.SDK_INT >= 24) {
-//            photoUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", new File(getFilePathBaseOnTime("intent.jpg")));
-//            //添加这一句表示对目标应用临时授权该Uri所代表的文件
-//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
-//                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//        }else {
-//            photoUri = Uri.fromFile(new File(getFilePathBaseOnTime("intent.jpg")));
-//        }
-//
-//
-//
-//        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-//        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-//    }
 
     /**
      * 通过uri获取图片的路径
