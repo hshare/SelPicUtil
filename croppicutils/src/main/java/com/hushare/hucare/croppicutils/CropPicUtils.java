@@ -1,10 +1,12 @@
 package com.hushare.hucare.croppicutils;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,7 +15,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -126,6 +130,7 @@ public class CropPicUtils extends BaseBeUtil {
         super(context, "huzeliang");
         this.fragment = fragment;
         this.context = context;
+
         progressDialog = new ProgressDialog(context);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.setCancelable(true);
@@ -258,12 +263,46 @@ public class CropPicUtils extends BaseBeUtil {
         }
     }
 
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 1889) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getPicHavePermission(PIC_FROM_CAMERA);
+            } else {
+                Toast.makeText(context, "未获得摄像头权限，无法使用此功能...", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getPicHavePermission(requestCode);
+            } else {
+                Toast.makeText(context, "未获SD卡读取权限，无法使用此功能...", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     /**
      * 图片处理逻辑
      *
      * @param type 选择类型，是从相册还是相机还是裁剪
      */
     public void doHandlerPhoto(int type) {
+
+        if (type == PIC_FROM_CAMERA) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.CAMERA}, 1889);
+            } else {
+                getPicHavePermission(PIC_FROM_CAMERA);
+            }
+        }else {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, type);
+            } else {
+                getPicHavePermission(type);
+            }
+        }
+
+    }
+
+    private void getPicHavePermission(int type) {
         try {
             if (type == PIC_FROM_LOCALPHOTO) {
                 super.iLog("doHandlerPhoto::PIC_FROM_LOCALPHOTO");
@@ -312,6 +351,12 @@ public class CropPicUtils extends BaseBeUtil {
         } catch (Exception e) {
             e.printStackTrace();
             super.iLog("doHandlerPhoto::处理图片出现错误");
+        }
+    }
+
+    public void onDestroy(){
+        if (progressDialog != null){
+            progressDialog.dismiss();
         }
     }
 

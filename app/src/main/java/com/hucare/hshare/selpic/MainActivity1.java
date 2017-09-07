@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.hushare.hucare.croppicutils.BottomPopWindow;
@@ -24,7 +25,7 @@ public class MainActivity1 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true).setIsCrop(true);
+        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true).setIsCrop(false);
         cropPicUtils.setOnCompressResult(new CropPicUtils.onCompressResult() {
             @Override
             public void onSuccess(String filePath) {
@@ -71,6 +72,18 @@ public class MainActivity1 extends AppCompatActivity {
     public void onHuClick2(View v) {
         bottomPopWindow.showTitlePop(v);
         cropPicUtils.setImageTag("iv2");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        cropPicUtils.onRequestPermissionsResult(requestCode,permissions, grantResults);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cropPicUtils.onDestroy();
     }
 
     @Override
