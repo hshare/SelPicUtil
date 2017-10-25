@@ -5,24 +5,40 @@ import android.app.FragmentManager;
 import android.support.annotation.NonNull;
 
 /**
- * 功能/模块 ：***
+ * 功能/模块 ：获取图片工具类
  *
  * @author huzeliang
- * @version 1.0 ${date} ${time}
+ * @version 1.0 2017-10-25 15:36:55
  * @see ***
  * @since ***
  */
 public class GetPicHelper {
 
+    /**
+     * fragment的tag
+     */
     static final String TAG = "mmpGetPic";
+    /**
+     * MmpFragment
+     */
     private MmpFragment mmpFragment;
 
-
+    /**
+     * 构造
+     *
+     * @param activity activity
+     */
     public GetPicHelper(@NonNull Activity activity) {
         mmpFragment = getFragment(activity);
         LogUtil.setLogUtil(activity, "huzeliang");
     }
 
+    /**
+     * 获取Fragment
+     *
+     * @param activity activity
+     * @return fragment
+     */
     public MmpFragment getFragment(Activity activity) {
         MmpFragment fragment = findFragment(activity);
         if (fragment == null) {
@@ -34,11 +50,32 @@ public class GetPicHelper {
         return fragment;
     }
 
+    /**
+     * 获取Fragment
+     *
+     * @param activity avtivity
+     * @return fragment
+     */
     private MmpFragment findFragment(Activity activity) {
         return (MmpFragment) activity.getFragmentManager().findFragmentByTag(TAG);
     }
 
-    public GetPicUtil getPicUtil() {
+    /**
+     * 获取GetPicUtil
+     *
+     * @return activity
+     */
+    public GetPicUtil getPicUtil1() {
         return mmpFragment.getPicUtil();
+    }
+
+    /**
+     * 获取GetPicUtil
+     *
+     * @param activity activity
+     * @return GetPicUtil
+     */
+    public static GetPicUtil getPicUtil(Activity activity) {
+        return (new GetPicHelper(activity)).getPicUtil1();
     }
 }

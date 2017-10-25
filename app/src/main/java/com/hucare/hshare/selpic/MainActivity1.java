@@ -6,15 +6,14 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.hushare.hucare.croppicutils.BottomPopWindow;
-import com.hushare.hucare.croppicutils.CropPicUtils;
+import com.hushare.hucare.croppicutils.GetPicUtil;
 
 public class MainActivity1 extends AppCompatActivity {
 
-    private CropPicUtils cropPicUtils;
+    private GetPicUtil cropPicUtils;
     private BottomPopWindow bottomPopWindow;
     private ImageView iv1;
     private ImageView iv2;
@@ -25,8 +24,8 @@ public class MainActivity1 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        cropPicUtils = new CropPicUtils(this, null).setIsCompress(true).setIsCrop(false);
-        cropPicUtils.setOnCompressResult(new CropPicUtils.onCompressResult() {
+        cropPicUtils = new GetPicUtil(this, null).setIsCompress(true).setIsCrop(false);
+        cropPicUtils.setOnCompressResult(new GetPicUtil.onCompressResult() {
             @Override
             public void onSuccess(String filePath) {
                 if (TextUtils.isEmpty(filePath)) {
@@ -53,12 +52,12 @@ public class MainActivity1 extends AppCompatActivity {
         bottomPopWindow = new BottomPopWindow(this, new BottomPopWindow.PopClick() {
             @Override
             public void firstClick() {
-                cropPicUtils.doHandlerPhoto(CropPicUtils.PIC_FROM_LOCALPHOTO);
+                cropPicUtils.doHandlerPhotoFromLocalPhoto();
             }
 
             @Override
             public void secondClick() {
-                cropPicUtils.doHandlerPhoto(CropPicUtils.PIC_FROM_CAMERA);
+                cropPicUtils.doHandlerPhotoFromCamera();
             }
         });
         bottomPopWindow.initTitleWindow("相册", "拍照");
@@ -76,7 +75,7 @@ public class MainActivity1 extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        cropPicUtils.onRequestPermissionsResult(requestCode,permissions, grantResults);
+        cropPicUtils.onRequestPermissionsResult(requestCode, permissions, grantResults);
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -89,20 +88,5 @@ public class MainActivity1 extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         cropPicUtils.onActivityResult(requestCode, resultCode, data);
-//        if (TextUtils.isEmpty(path)) {
-//            return;
-//        }
-//        if ("iv1".equals(cropPicUtils.getImageTag())) {
-//            Glide.with(this)
-//                    .load("file://" + path)
-//                    .thumbnail(0.2f)
-//                    .into(iv1);
-//        } else {
-//            Glide.with(this)
-//                    .load("file://" + path)
-//                    .thumbnail(0.2f)
-//                    .into(iv2);
-//        }
-
     }
 }

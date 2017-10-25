@@ -9,18 +9,23 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
- * 功能/模块 ：***
+ * 功能/模块 ：使用Fragment处理运行时权限和
  *
  * @author huzeliang
- * @version 1.0 ${date} ${time}
+ * @version 1.0 2017-10-25 15:32:22
  * @see ***
  * @since ***
  */
 public class MmpFragment extends Fragment {
 
-    private static final int PERMISSIONS_REQUEST_CODE = 42;
+    /**
+     * 选择图片工具类
+     */
     private GetPicUtil getPicUtil;
 
+    /**
+     * 构造
+     */
     public MmpFragment() {
 
     }
@@ -29,22 +34,19 @@ public class MmpFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        getPicUtil = new GetPicUtil(getActivity(), this);
+        getPicUtil();
     }
 
-    public GetPicUtil getPicUtil(){
+    public GetPicUtil getPicUtil() {
+        if (getPicUtil == null){
+            getPicUtil = new GetPicUtil(getActivity(), this);
+        }
         return getPicUtil;
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    void requestPermissions(@NonNull String[] permissions) {
-        requestPermissions(permissions, PERMISSIONS_REQUEST_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        getPicUtil.onRequestPermissionsResult(requestCode,permissions, grantResults);
+        getPicUtil.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -56,7 +58,7 @@ public class MmpFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (getPicUtil != null){
+        if (getPicUtil != null) {
             getPicUtil.onDestroy();
         }
     }

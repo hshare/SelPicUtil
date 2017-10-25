@@ -38,7 +38,7 @@ import top.zibin.luban.OnCompressListener;
 public class GetPicUtil {
 
     /**
-     * 在Fragment时，需要传入Fragment，你懂的
+     * 在Fragment时，需要传入Fragment
      */
     private Fragment fragment;
     /**
@@ -56,15 +56,15 @@ public class GetPicUtil {
     /**
      * 标志位，从相机获取图片
      */
-    public static final int PIC_FROM_CAMERA = 0x1122;
+    private static final int PIC_FROM_CAMERA = 0x1122;
     /**
      * 标志位，从相册获取图片
      */
-    public static final int PIC_FROM_LOCALPHOTO = 0x1123;
+    private static final int PIC_FROM_LOCALPHOTO = 0x1123;
     /**
      * 标志位，从裁剪获取图片
      */
-    public static final int PIC_FROM_CAIJIAN = 0x1124;
+    private static final int PIC_FROM_CAIJIAN = 0x1124;
     /**
      * 是否裁剪
      */
@@ -181,8 +181,9 @@ public class GetPicUtil {
      *
      * @param onCompressResult 实现的回调接口
      */
-    public void setOnCompressResult(GetPicUtil.onCompressResult onCompressResult) {
+    public GetPicUtil setOnCompressResult(GetPicUtil.onCompressResult onCompressResult) {
         this.onCompressResult = onCompressResult;
+        return this;
     }
 
     /**
@@ -278,7 +279,7 @@ public class GetPicUtil {
      * @param type 选择类型，是从相册还是相机还是裁剪
      */
     @TargetApi(Build.VERSION_CODES.M)
-    public void doHandlerPhoto(int type) {
+    private void doHandlerPhoto(int type) {
 
         if (type == PIC_FROM_CAMERA) {
             if (context.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -296,6 +297,14 @@ public class GetPicUtil {
             }
         }
 
+    }
+
+    public void doHandlerPhotoFromCamera() {
+        doHandlerPhoto(GetPicUtil.PIC_FROM_CAMERA);
+    }
+
+    public void doHandlerPhotoFromLocalPhoto() {
+        doHandlerPhoto(GetPicUtil.PIC_FROM_LOCALPHOTO);
     }
 
     private void getPicHavePermission(int type) {
