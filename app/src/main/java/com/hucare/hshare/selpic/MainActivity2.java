@@ -24,7 +24,7 @@ public class MainActivity2 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        getPicUtil = GetPicHelper.getPicUtil(this).setIsCompress(true).setIsCrop(false).setOnCompressResult(new GetPicUtil.onCompressResult() {
+        getPicUtil = GetPicHelper.getPicUtil(this).setIsCompress(true).setIsCrop(true).setSsx(3).setSsy(9).setOnCompressResult(new GetPicUtil.onCompressResult() {
             @Override
             public void onSuccess(String filePath) {
                 if (TextUtils.isEmpty(filePath)) {
