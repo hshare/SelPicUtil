@@ -9,12 +9,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
- * 功能/模块 ：使用Fragment处理运行时权限和
- *
+ * 使用Fragment处理运行时权限和
  * @author huzeliang
- * @version 1.0 2017-10-25 15:32:22
- * @see ***
- * @since ***
  */
 public class MmpFragment extends Fragment {
 

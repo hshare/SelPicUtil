@@ -13,12 +13,8 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 /**
- * 功能/模块 ：从底部弹出的三选框
- *
+ * 从底部弹出的三选框
  * @author huzeliang
- * @version 1.0 2017/3/21
- * @see ***
- * @since ***
  */
 public class BottomPopWindow {
     /**

@@ -26,14 +26,12 @@ import top.zibin.luban.Luban;
 import top.zibin.luban.OnCompressListener;
 
 /**
- * 功能/模块 ：从相册或者拍照获取照片
+ * 从相册或者拍照获取照片
  * 支持任意比例裁剪
  * 支持压缩，指定大小
  *
  * @author huzeliang
- * @version 1.1 2017/9/7对Android7.0进行了适配，并删除了bitmap操作
- * @see ***
- * @since ***
+ * 2017/9/7对Android7.0进行了适配，并删除了bitmap操作
  */
 public class GetPicUtil {
 

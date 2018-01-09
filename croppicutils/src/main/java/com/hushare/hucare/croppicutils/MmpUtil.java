@@ -4,12 +4,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 /**
- * 功能/模块 ：工具类
- *
+ * 工具类
  * @author huzeliang
- * @version 1.0 2017-10-25 14:55:52
- * @see ***
- * @since ***
  */
 public class MmpUtil {
 

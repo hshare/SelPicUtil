@@ -5,12 +5,8 @@ import android.app.FragmentManager;
 import android.support.annotation.NonNull;
 
 /**
- * 功能/模块 ：获取图片工具类
- *
+ * 获取图片工具类
  * @author huzeliang
- * @version 1.0 2017-10-25 15:36:55
- * @see ***
- * @since ***
  */
 public class GetPicHelper {
 

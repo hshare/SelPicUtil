@@ -5,12 +5,8 @@ import android.content.pm.ApplicationInfo;
 import android.util.Log;
 
 /**
- * 功能/模块 ：打印LOG
- *
+ * 打印LOG
  * @author huzeliang
- * @version 1.0 2017-10-25 14:54:58
- * @see ***
- * @since ***
  */
 public class LogUtil {
 
