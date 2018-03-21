@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -33,7 +34,7 @@ import top.zibin.luban.OnCompressListener;
  * @author huzeliang
  * 2017/9/7对Android7.0进行了适配，并删除了bitmap操作
  */
-public class GetPicUtil {
+public class GetPicUtil implements ICallback{
 
     /**
      * 在Fragment时，需要传入Fragment
@@ -137,6 +138,7 @@ public class GetPicUtil {
                 file2.mkdir();
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         LogUtil.iLog("初始化StorePath：" + STOREPATH);
@@ -255,6 +257,7 @@ public class GetPicUtil {
         }
     }
 
+    @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 1889) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -287,7 +290,7 @@ public class GetPicUtil {
                 getPicHavePermission(PIC_FROM_CAMERA);
             }
         } else {
-            if (context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, type);
                 fragment.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, type);
             } else {
@@ -295,6 +298,14 @@ public class GetPicUtil {
             }
         }
 
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private int checkSelfPermission(String permission){
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)){
+            return context.checkSelfPermission(permission);
+        }
+        return 0;
     }
 
     public void doHandlerPhotoFromCamera() {
@@ -357,6 +368,7 @@ public class GetPicUtil {
         }
     }
 
+    @Override
     public void onDestroy() {
         if (progressDialog != null) {
             progressDialog.dismiss();
@@ -371,6 +383,7 @@ public class GetPicUtil {
      * @param data        你懂的
      * @return 图片路径
      */
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) {
             LogUtil.iLog("onActivityResult::resultCode != Activity.RESULT_OK");

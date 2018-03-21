@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.hushare.hucare.croppicutils.BottomPopWindow;
@@ -24,7 +25,7 @@ public class MainActivity2 extends AppCompatActivity {
         setContentView(R.layout.activity_main1);
         iv1 = (ImageView) findViewById(R.id.iv1);
         iv2 = (ImageView) findViewById(R.id.iv2);
-        getPicUtil = GetPicHelper.getPicUtil(this).setIsCompress(true).setIsCrop(true).setSsx(3).setSsy(9).setOnCompressResult(new GetPicUtil.onCompressResult() {
+        getPicUtil = GetPicHelper.getPicUtil(this).setIsCompress(true).setIsCrop(true).setSsx(1).setSsy(1).setOnCompressResult(new GetPicUtil.onCompressResult() {
             @Override
             public void onSuccess(String filePath) {
                 if (TextUtils.isEmpty(filePath)) {
@@ -45,7 +46,7 @@ public class MainActivity2 extends AppCompatActivity {
 
             @Override
             public void onFailed(String errorMsg) {
-
+                Toast.makeText(MainActivity2.this,"" + errorMsg ,Toast.LENGTH_SHORT).show();
             }
         });
         bottomPopWindow = new BottomPopWindow(this, new BottomPopWindow.PopClick() {

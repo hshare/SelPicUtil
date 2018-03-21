@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 /**
  * 获取图片工具类
+ *
  * @author huzeliang
  */
 public class GetPicHelper {
@@ -18,6 +19,7 @@ public class GetPicHelper {
      * MmpFragment
      */
     private MmpFragment mmpFragment;
+    private GetPicUtil getPicUtil;
 
     /**
      * 构造
@@ -62,7 +64,12 @@ public class GetPicHelper {
      * @return activity
      */
     public GetPicUtil getPicUtil1() {
-        return mmpFragment.getPicUtil();
+        if (getPicUtil == null) {
+            CallBackWrapper iCallback = (CallBackWrapper) mmpFragment.getiCallbackWrapper();
+            getPicUtil = new GetPicUtil(mmpFragment.getActivity(), mmpFragment);
+            iCallback.attachCallBackWrapper(getPicUtil);
+        }
+        return getPicUtil;
     }
 
     /**
